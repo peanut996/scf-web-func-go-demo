@@ -1,0 +1,4 @@
+#!/bin/bash
+cp scf-web-func-go-demo /tmp/
+chmod +x /tmp/scf-web-func-go-demo
+/tmp/scf-web-func-go-demo

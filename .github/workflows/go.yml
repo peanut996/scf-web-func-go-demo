@@ -1,0 +1,103 @@
+name: Serverless Go
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+      - name: Build
+        run: cd src && go mod tidy && go build
+
+  deploy-dev:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      - name: Build
+        run: cd src && go mod tidy && go build
+
+      - name: serverless scf deploy
+        uses: woodyyan/tencent-serverless-action@main
+        env:
+          STAGE: dev
+          SERVERLESS_PLATFORM_VENDOR: tencent
+          # organization secrets
+          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          # repository secrets
+          VPC_ID: ${{ secrets.VPC_ID }}
+          # environment secrets
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          SUBNET_ID: ${{ secrets.SUBNET_ID }}
+          API_GW_SERVICE_NAME: ${{ secrets.API_GW_SERVICE_NAME }}
+          API_GW_SERVICE_ID: ${{ secrets.API_GW_SERVICE_ID }}
+          # business secrets
+          MULTIPLE: ${{ secrets.MULTIPLE }}
+          SMS_SDK_APP_ID: ${{ secrets.SMS_SDK_APP_ID }}
+          SMS_SIGN_NAME: ${{ secrets.SMS_SIGN_NAME }}
+          TEMPLATE_ID: ${{ secrets.TEMPLATE_ID }}
+
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs:
+      - deploy-dev
+    environment:
+      name: prod
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18
+
+      - name: Build
+        run: cd src && go mod tidy && go build
+
+      - name: serverless scf deploy
+        uses: woodyyan/tencent-serverless-action@main
+        env:
+          STAGE: prod
+          SERVERLESS_PLATFORM_VENDOR: tencent
+          # organization secrets
+          TENCENT_SECRET_ID: ${{ secrets.TENCENT_SECRET_ID }}
+          TENCENT_SECRET_KEY: ${{ secrets.TENCENT_SECRET_KEY }}
+          # repository secrets
+          VPC_ID: ${{ secrets.VPC_ID }}
+          # envirmonent secrets
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          SUBNET_ID: ${{ secrets.SUBNET_ID }}
+          API_GW_SERVICE_NAME: ${{ secrets.API_GW_SERVICE_NAME }}
+          API_GW_SERVICE_ID: ${{ secrets.API_GW_SERVICE_ID }}
+          # business secrets
+          MULTIPLE: ${{ secrets.MULTIPLE }}
+          SMS_SDK_APP_ID: ${{ secrets.SMS_SDK_APP_ID }}
+          SMS_SIGN_NAME: ${{ secrets.SMS_SIGN_NAME }}
+          TEMPLATE_ID: ${{ secrets.TEMPLATE_ID }}

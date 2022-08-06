@@ -1,0 +1,42 @@
+app: scf-web-func-go-demo
+component: scf
+name: api
+stage: ${env:STAGE}
+inputs:
+  name: ${app}-${name}-${stage}
+  src:
+    src: ./src
+  type: web
+  runtime: Go1
+  namespace: default
+  region: ap-guangzhou
+  memorySize: 512
+  timeout: 3
+  # ignoreTriggers: true 开启此项这意味手动部署触发器
+  environment:
+    variables: #  环境变量
+      STAGE: ${stage}
+      DB_HOST: ${env:DB_HOST} # ${env:DB_HOST} 是从系统中获取环境变量的方式
+      DB_PORT: ${env:DB_PORT}
+      DB_USER: ${env:DB_USER}
+      DB_PASSWORD: ${env:DB_PASSWORD}
+      DB_NAME: ${env:DB_NAME}
+  vpcConfig:
+    vpcId: ${env:VPC_ID}
+    subnetId: ${env:SUBNET_ID}
+  events:
+    - apigw: # API Gateway 触发器
+        parameters:
+          serviceName: ${env:API_GW_SERVICE_NAME}
+          serviceId: ${env:API_GW_SERVICE_ID}
+          protocols:
+            - http
+            - https
+          netTypes:
+            - OUTER
+          environment: release
+          endpoints:
+            - path: /
+              method: ANY
+              enableCORS: true
+              apiName: ${app}-${name}-${stage}
